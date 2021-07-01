@@ -1,5 +1,8 @@
 package com.springmobile.springmobile.ui.controller;
 
+import com.springmobile.springmobile.ui.model.response.UserRest;
+
+import org.apache.tomcat.util.http.parser.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,12 +18,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     @GetMapping()
-    public String getUser(@RequestParam(value="page", defaultValue = "1") int page,
+    public UserRest getUser(@RequestParam(value="page", defaultValue = "1") int page,
                           @RequestParam(value="limit", defaultValue = "50") int limit) {
-        return "get user was called with page = " + page + " and limit = " + limit;
+        UserRest returnValue = new UserRest();
+        returnValue.setFirstName("Juno");
+        returnValue.setLastName("Munkhkhurel");
+        returnValue.setEmail("email@email.com");
+        returnValue.setPassword("123");
+
+        return returnValue;
     }
 
-    @GetMapping(path="/{userId}")
+    @GetMapping(path="/{userId}", 
+        produces = {
+            org.springframework.http.MediaType.APPLICATION_XML_VALUE, 
+            org.springframework.http.MediaType.APPLICATION_JSON_VALUE })
     public String getUser(@PathVariable String userId) {
         return "get user was called with userId" + userId;
     }
