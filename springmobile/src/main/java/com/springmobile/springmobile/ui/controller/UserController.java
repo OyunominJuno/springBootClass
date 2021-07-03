@@ -1,10 +1,16 @@
 package com.springmobile.springmobile.ui.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import javax.validation.Valid;
 
 import com.springmobile.springmobile.ui.model.request.UserDetailsRequestModel;
 import com.springmobile.springmobile.ui.model.response.UserRest;
 
+import org.apache.catalina.User;
+import org.apache.tomcat.util.http.parser.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -23,6 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 public class UserController {
 
+    Map<String, UserRest> users;
+
     @GetMapping()
     public ResponseEntity<UserRest> getUser(@RequestParam(value="page", defaultValue = "1") int page,
                           @RequestParam(value="limit", defaultValue = "50") int limit) {
@@ -38,8 +46,13 @@ public class UserController {
         produces = {
             org.springframework.http.MediaType.APPLICATION_XML_VALUE, 
             org.springframework.http.MediaType.APPLICATION_JSON_VALUE })
-    public String getUser(@PathVariable String userId) {
-        return "get user was called with userId" + userId;
+    public ResponseEntity<UserRest> getUser(@PathVariable String userId) {
+        if(users.containsKey(userId)) {
+            return new ResponseEntity<UserRest>(users.get(userId), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<UserRest>(HttpStatus.NO_CONTENT);
+        }
+        
     }
 
     @PostMapping(
@@ -56,18 +69,42 @@ public class UserController {
         returnValue.setFirstName(userDetail.getFirstName());
         returnValue.setLastName(userDetail.getLastName());
         returnValue.setEmail(userDetail.getEmail());
-        //returnValue.setPassword(userDetail.getPassword());
+
+        String userId = UUID.randomUUID().toString();
+        returnValue.setUserId(userId);
+
+        if (users == null) users = new HashMap<>();
+        users.put(userId, returnValue);
 
         return new ResponseEntity<UserRest>(returnValue, HttpStatus.ACCEPTED);
     }
 
-    @PutMapping
-    public String putUser() {
-        return "put user was called";
+    @PutMapping(path="/{userId}", 
+        produces = {
+            org.springframework.http.MediaType.APPLICATION_XML_VALUE, 
+            org.springframework.http.MediaType.APPLICATION_JSON_VALUE },
+        consumes  = {
+            org.springframework.http.MediaType.APPLICATION_XML_VALUE, 
+            org.springframework.http.MediaType.APPLICATION_JSON_VALUE }  
+    )
+    public ResponseEntity<UserRest> putUser(@PathVariable String userId, @RequestBody UserDetailsRequestModel userDetail) {
+        if (users.containsKey(userId)) {
+            //UserRest updatingUser = users.get(userId);
+            if(userDetail.getFirstName() != null) {
+                users.get(userId).setFirstName(userDetail.getFirstName());
+            }
+            if(userDetail.getLastName() != null) {
+                users.get(userId).setLastName(userDetail.getLastName());
+            }
+            return new ResponseEntity<UserRest>(users.get(userId), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<UserRest>(HttpStatus.NO_CONTENT);
+        }
     }
 
-    @DeleteMapping
-    public String deleteUser() {
-        return "delete user was called";
+    @DeleteMapping(path="/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String userId) {
+        users.remove(userId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
